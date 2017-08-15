@@ -1,12 +1,10 @@
-#define USE_ILI9341
 #include "ILI9488_kbv.h"
 #include "serial_kbv.h"
 
-#if defined(USE_ILI9341)
-ILI9488_kbv::ILI9488_kbv():Adafruit_GFX(240, 320){}
-#else
-ILI9488_kbv::ILI9488_kbv():Adafruit_GFX(320, 480){}
-#endif
+ILI9488_kbv::ILI9488_kbv():Adafruit_GFX(320, 480)
+{
+	
+}
 
 static uint8_t done_reset;
 
@@ -310,37 +308,7 @@ const uint8_t PROGMEM ILI9488_regValues_kbv[] = {
             0x29, 0,            //Display On
 };
 
-#if defined(USE_ILI9341)
-		static const uint8_t ILI9341_regValues_2_4[] PROGMEM = {   // BOE 2.4"
-			0x01, 0,            // software reset
-			TFTLCD_DELAY8, 50,   // .kbv
-			0xCF, 3, 0x00, 0x81, 0x30,  //Power Control B [00 81 30]
-			0xED, 4, 0x64, 0x03, 0x12, 0x81,    //Power On Seq [55 01 23 01]
-			0xE8, 3, 0x85, 0x10, 0x78,  //Driver Timing A [04 11 7A]
-			0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,      //Power Control A [39 2C 00 34 02]
-			0xF7, 1, 0x20,      //Pump Ratio [10]
-			0xEA, 2, 0x00, 0x00,        //Driver Timing B [66 00]
-			0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
-            0xB6, 3, 0x0A, 0xA2, 0x27, //Display Function [0A 82 27 XX]    .kbv SS=1
-			0xB4, 1, 0x00,      //Inversion Control [02] .kbv NLA=1, NLB=1, NLC=1
-			0xC0, 1, 0x21,      //Power Control 1 [26]
-			0xC1, 1, 0x11,      //Power Control 2 [00]
-			0xC5, 2, 0x3F, 0x3C,        //VCOM 1 [31 3C]
-			0xC7, 1, 0xB5,      //VCOM 2 [C0]
-			0x36, 1, 0x48,      //Memory Access [00]
-			0xF2, 1, 0x00,      //Enable 3G [02]
-			0x26, 1, 0x01,      //Gamma Set [01]
-			0xE0, 15, 0x0f, 0x26, 0x24, 0x0b, 0x0e, 0x09, 0x54, 0xa8, 0x46, 0x0c, 0x17, 0x09, 0x0f, 0x07, 0x00,
-			0xE1, 15, 0x00, 0x19, 0x1b, 0x04, 0x10, 0x07, 0x2a, 0x47, 0x39, 0x03, 0x06, 0x06, 0x30, 0x38, 0x0f,
-			0x11, 0,            //Sleep Out
-			TFTLCD_DELAY8, 150,
-			0x29, 0,            //Display On
-			0x3A, 1, 0x66,      //Pixel Format [66]
-		};
-#define tableNNNN ILI9341_regValues_2_4
-#else
 #define tableNNNN ILI9488_regValues_kbv
-#endif
 
 void ILI9488_kbv::begin(uint16_t ID)
 {
