@@ -81,12 +81,12 @@ static uint8_t spibuf[16];
 #define MOSI_PIN   PB15
 #define SCK_PIN    PB13
 #else
-#define CD_PIN     9
-#define CS_PIN     10
-#define RESET_PIN  8
-#define SD_PIN     4
-#define MOSI_PIN   11
-#define SCK_PIN    13
+#define CD_PIN     11 //PB5 9
+#define CS_PIN     10 //PB4 10
+#define RESET_PIN  12 //PB6 8
+#define SD_PIN     13 //PB7 4
+#define MOSI_PIN   51 //PB2 11
+#define SCK_PIN    52 //PB1 13
 #endif
 
 #define SETDDR  { CS_OUTPUT; CD_OUTPUT; RESET_OUTPUT; PIN_HIGH(SD_PORT, SD_PIN); PIN_OUTPUT(SD_PORT, SD_PIN); }
