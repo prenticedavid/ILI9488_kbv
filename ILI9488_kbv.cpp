@@ -149,6 +149,7 @@ void ILI9488_kbv::setRotation(uint8_t r)
         mac = 0xB8;
         break;
     }
+	mac &= ~0x08;  //BGR=0
     pushCommand(ILI9488_CMD_MEMORY_ACCESS_CONTROL, &mac, 1);
 }
 
@@ -160,8 +161,10 @@ void ILI9488_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
     CS_ACTIVE;
     WriteCmd(ILI9488_CMD_COLUMN_ADDRESS_SET);
     write16(x);
+    write16(x);    //set end address
     WriteCmd(ILI9488_CMD_PAGE_ADDRESS_SET);
     write16(y);
+    write16(y);    //set end address
     WriteCmd(ILI9488_CMD_MEMORY_WRITE);
     write24(color);
     CS_IDLE;
@@ -265,7 +268,8 @@ void ILI9488_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool 
 
 void ILI9488_kbv::invertDisplay(boolean i)
 {
-    pushCommand(i ? ILI9488_CMD_DISP_INVERSION_ON : ILI9488_CMD_DISP_INVERSION_OFF, NULL, 0);
+    i = !i;    //REV=0
+	pushCommand(i ? ILI9488_CMD_DISP_INVERSION_ON : ILI9488_CMD_DISP_INVERSION_OFF, NULL, 0);
 }
     
 void ILI9488_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
