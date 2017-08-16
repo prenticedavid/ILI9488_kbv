@@ -375,4 +375,5 @@ void ILI9488_kbv::begin(uint16_t ID)
 	    size -= len + 2;
     }
     setRotation(0);             //PORTRAIT
+    invertDisplay(0);           //cos ILI9341 is different
 }
