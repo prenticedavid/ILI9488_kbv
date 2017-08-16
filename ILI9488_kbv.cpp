@@ -81,7 +81,11 @@ static uint8_t readReg8(uint8_t reg, uint8_t dat)
 
 uint8_t ILI9488_kbv::readcommand8(uint8_t reg, uint8_t idx)         //this is the same as Adafruit_ILI9488
 {
+#if defined(USE_ILI9341)
+    readReg8(0xD9, 0x10 | idx);   //SPI_READ, SPI_READ_EN
+#else
     readReg8(0xFB, 0x80 | idx);   //SPI_READ, SPI_READ_EN
+#endif
     return readReg8(reg, 0xFF); 
 }
     
