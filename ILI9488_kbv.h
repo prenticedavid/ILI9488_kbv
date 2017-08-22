@@ -3,7 +3,7 @@
 
 #define USE_MBED 0
 
-#if ARDUINO < 165
+#if ARDUINO < 101
 #define USE_GFX_KBV
 #include "ADA_GFX_kbv.h"
 #else
