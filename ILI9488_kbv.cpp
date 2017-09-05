@@ -317,6 +317,27 @@ const uint8_t PROGMEM ILI9488_regValues_kbv[] = {
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
 };
+const uint8_t PROGMEM ILI9488_regValues_jared[] = {
+    //  (COMMAND_BYTE), n, data_bytes....
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY8, 150,  // .kbv will power up with ONLY reset, sleep out, display on
+            0x28, 0,            //Display Off
+    (0xE0),15,0x00,0x03,0x09,0x08,0x16,0x0A,0x3F,0x78,0x4C,0x09,0x0A,0x08,0x16,0x1A,0x0F,
+    (0xE1),15,0x00,0x16,0x19,0x03,0x0F,0x05,0x32,0x45,0x46,0x04,0x0E,0x0D,0x35,0x37,0x0F,
+    (0xC0), 2,      /*Power Control 1*/ 0x17,    /*Vreg1out*/ 0x15,    /*Verg2out*/
+    (0xC1), 1,      /*Power Control 2*/ 0x41,    /*VGH,VGL*/
+    (0xC5), 3,      /*Power Control 3*/ 0x00,0x12,    /*Vcom*/ 0x80,
+    (0x36), 1,      /*Memory Access*/ 0x48,
+    (0x3A), 1,      /* Interface Pixel Format*/ 0x66,     /*18 bit*/
+//    (0xB0), 1,      /* Interface Mode Control*/ 0x80,                            /*SDO NOT USE*/
+    (0xB1), 1,      /*Frame rate*/ 0xA0,    /*60Hz*/
+    (0xB4), 1,      /*Display Inversion Control*/ 0x02,    /*2-dot*/
+    (0xB6), 2,      /*Display Function Control  RGB/MCU Interface Control*/ 0x02,    /*MCU*/ 0x02,    /*Source,Gate scan dieection*/
+    (0xE9), 1,      /* Set Image Functio*/ 0x00,    /* Disable 24 bit data*/
+			0x11, 0,            //Sleep Out
+            TFTLCD_DELAY8, 150,
+            0x29, 0,            //Display On
+};
 
 #if defined(USE_ILI9341)
 		static const uint8_t ILI9341_regValues_2_4[] PROGMEM = {   // BOE 2.4"
@@ -349,6 +370,7 @@ const uint8_t PROGMEM ILI9488_regValues_kbv[] = {
 #define tableNNNN ILI9341_regValues_2_4
 #else
 #define tableNNNN ILI9488_regValues_kbv
+//#define tableNNNN ILI9488_regValues_jared
 #endif
 
 void ILI9488_kbv::begin(uint16_t ID)
