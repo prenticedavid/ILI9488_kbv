@@ -86,6 +86,45 @@ void showhanzi(unsigned int x, unsigned int y, unsigned char index)
     }
 }
 
+void diag_reg(const char *pgm_name, uint8_t reg, uint8_t n)
+{
+    uint8_t x = reg;
+    char name[20];
+    strcpy_P(name, pgm_name);
+    Serial.print(name);
+    Serial.print(" (0x");
+    Serial.print(x < 0x10 ? "0" : "");
+    Serial.print(x, HEX);
+    Serial.print("):");
+    for (int i = 0; i < n; i++) {
+        uint8_t x = tft.readcommand8(reg, i);
+        Serial.print(x < 0x10 ? " 0" : " ");
+        Serial.print(x, HEX);
+    }
+    Serial.println("");
+}
+
+void diag_show(void)
+{
+    diag_reg(PSTR("ILI9488_RDDID"), 0x04, 5);
+    diag_reg(PSTR("ILI9488_RDIMGFMT"), 0x0A, 1);
+    diag_reg(PSTR("ILI9488_RDMADCTL"), 0x0B, 1);
+    diag_reg(PSTR("ILI9488_RDPIXFMT"), 0x0C, 1);
+    diag_reg(PSTR("ILI9488_RDSELFDIAG"), 0x0F, 1);
+    diag_reg(PSTR("ILI9488_DFUNCTR"), 0xb6, 5);
+    diag_reg(PSTR("ILI9488_PWCTR1"), 0xC0, 3);
+    diag_reg(PSTR("ILI9488_VMCTR1"), 0xC5, 3);
+    diag_reg(PSTR("ILI9488_VMCTR2"), 0xC7, 2);
+    diag_reg(PSTR("NVM Status   "), 0xD2, 3);
+    diag_reg(PSTR("ID4          "), 0xD3, 4);
+    diag_reg(PSTR("ILI9488_RDID1"), 0xDA, 2);
+    diag_reg(PSTR("ILI9488_RDID2"), 0xDB, 2);
+    diag_reg(PSTR("ILI9488_RDID3"), 0xDC, 2);
+    diag_reg(PSTR("GAMMAP       "), 0xE0, 16);
+    diag_reg(PSTR("GAMMAN       "), 0xE1, 16);
+    diag_reg(PSTR("INTERFACE    "), 0xf6, 4);
+}
+
 void setup(void) {
     Serial.begin(9600);
     uint32_t when = millis();
@@ -99,6 +138,9 @@ void setup(void) {
     if (ID == 0xD3D3) ID = 0x9481; // write-only shield
 //    ID = 0x9329;                             // force ID
     tft.begin(ID);
+//    tft.setRotation(1);
+    // read diagnostics (optional but can help debug problems)
+    diag_show();
 }
 
 #if defined(MCUFRIEND_KBV_H_)
@@ -151,7 +193,7 @@ void loop(void) {
     const char *colorname[] = { "BLUE", "GREEN", "RED", "GRAY" };
     uint16_t colormask[] = { 0x001F, 0x07E0, 0xF800, 0xFFFF };
     uint16_t dx, rgb, n, wid, ht, msglin;
-    tft.setRotation(0);
+    tft.setRotation(1);
     runtests();
     delay(2000);
     if (tft.height() > 64) {
@@ -181,7 +223,7 @@ void loop(void) {
             tft.drawPixel(0, 0, YELLOW);
             pixel = tft.readPixel(0, 0);
             tft.setTextSize((ht > 160) ? 2 : 1); //for messages
-#if defined(MCUFRIEND_KBV_H_)
+#if 1 || defined(MCUFRIEND_KBV_H_)
 #if 1
             extern const uint8_t penguin[];
             tft.setAddrWindow(wid - 40 - 40, 20 + 0, wid - 1 - 40, 20 + 39);
@@ -324,7 +366,7 @@ void runtests(void)
     tft.println("sec");
     g_identifier = tft.readID();
     tft.print("ID: 0x");
-    tft.println(tft.readID(), HEX);
+    tft.println(g_identifier, HEX);
 //    tft.print("Reg(00):0x");
 //    tft.println(tft.readReg(0x00), HEX);
     tft.print("F_CPU:");
@@ -587,4 +629,3 @@ unsigned long testFilledRoundRects() {
 
     return micros() - start;
 }
-
