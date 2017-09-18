@@ -1,12 +1,20 @@
-#define USE_ILI9341
+//#define USE_ILI9341
 #include "ILI9488_kbv.h"
 #include "serial_kbv.h"
 
 #if defined(USE_ILI9341)
-ILI9488_kbv::ILI9488_kbv():Adafruit_GFX(240, 320){}
+#define ILI9488_TFTWIDTH 240
+#define ILI9488_TFTHEIGHT 320
+#define SPIREAD_CMD    0xD9
+#define SPIREAD_EN    (1<<4)
 #else
-ILI9488_kbv::ILI9488_kbv():Adafruit_GFX(320, 480){}
+#define ILI9488_TFTWIDTH 320
+#define ILI9488_TFTHEIGHT 480
+#define SPIREAD_CMD    0xFB
+#define SPIREAD_EN    (1<<7)
 #endif
+
+ILI9488_kbv::ILI9488_kbv():Adafruit_GFX(ILI9488_TFTWIDTH, ILI9488_TFTHEIGHT){}
 
 static uint8_t done_reset;
 
@@ -81,12 +89,10 @@ static uint8_t readReg8(uint8_t reg, uint8_t dat)
 
 uint8_t ILI9488_kbv::readcommand8(uint8_t reg, uint8_t idx)         //this is the same as Adafruit_ILI9488
 {
-#if defined(USE_ILI9341)
-    readReg8(0xD9, 0x10 | idx);   //SPI_READ, SPI_READ_EN
-#else
-    readReg8(0xFB, 0x80 | idx);   //SPI_READ, SPI_READ_EN
-#endif
-    return readReg8(reg, 0xFF); 
+    readReg8(SPIREAD_CMD, SPIREAD_EN | idx);   //SPI_READ, SPI_READ_EN
+    uint8_t ret = readReg8(reg, 0xFF); 
+    readReg8(SPIREAD_CMD, 0);   //ILI9488 MUST disable afterwards
+	return ret;
 }
     
 uint16_t ILI9488_kbv::readID(void)                          //{ return 0x9341; }
@@ -153,7 +159,7 @@ void ILI9488_kbv::setRotation(uint8_t r)
         mac = 0xB8;
         break;
     }
-	mac &= ~0x08;  //BGR=0
+//	mac &= ~0x08;  //BGR=0
     pushCommand(ILI9488_CMD_MEMORY_ACCESS_CONTROL, &mac, 1);
 }
 
@@ -272,7 +278,7 @@ void ILI9488_kbv::pushColors(const uint8_t * block, int16_t n, bool first, bool 
 
 void ILI9488_kbv::invertDisplay(boolean i)
 {
-    i = !i;    //REV=0
+//    i = !i;    //REV=0
 	pushCommand(i ? ILI9488_CMD_DISP_INVERSION_ON : ILI9488_CMD_DISP_INVERSION_OFF, NULL, 0);
 }
     
@@ -301,7 +307,7 @@ const uint8_t PROGMEM ILI9488_regValues_kbv[] = {
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 150,  // .kbv will power up with ONLY reset, sleep out, display on
             0x28, 0,            //Display Off
-            0x3A, 1, 0x66,      //Pixel read=666, write=666
+//            0x3A, 1, 0x66,      //Pixel read=666, write=666
             0xC0, 2, 0x10, 0x10,        //Power Control 1 [0E 0E]
             0xC1, 1, 0x41,      //Power Control 2 [43]
             0xC5, 4, 0x00, 0x22, 0x80, 0x40,    //VCOM  Control 1 [00 40 00 40]
@@ -309,9 +315,9 @@ const uint8_t PROGMEM ILI9488_regValues_kbv[] = {
             0xB0, 1, 0x00,      //Interface     [00]
             0xB1, 2, 0xB0, 0x11,        //Frame Rate Control [B0 11]
             0xB4, 1, 0x02,      //Inversion Control [02]
-            0xB6, 3, 0x02, 0x02, 0x3B,  // Display Function Control [02 02 3B] .kbv NL=480
+            0xB6, 3, 0x02, 0x22, 0x3B,  // Display Function Control [02 02 3B] .kbv SS=1, NL=480
             0xB7, 1, 0xC6,      //Entry Mode      [06]
-            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
+            0x3A, 1, 0x66,      //Interlace Pixel Format [XX]
             0xF7, 4, 0xA9, 0x51, 0x2C, 0x82,    //Adjustment Control 3 [A9 51 2C 82]
 			0x11, 0,            //Sleep Out
             TFTLCD_DELAY8, 150,
