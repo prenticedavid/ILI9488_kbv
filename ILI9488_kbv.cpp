@@ -356,8 +356,8 @@ const uint8_t PROGMEM ILI9488_regValues_jared[] = {
 			0xF7, 1, 0x20,      //Pump Ratio [10]
 			0xEA, 2, 0x00, 0x00,        //Driver Timing B [66 00]
 			0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
-            0xB6, 3, 0x0A, 0x22, 0x27, //Display Function [0A 82 27 XX]    .kbv REV=0,SS=1
-            0xF6, 1, 0x09,      //Interface Control [01 00 00] .kbv BGR=1
+            0xB6, 3, 0x0A, 0xA2, 0x27, //Display Function [0A 82 27 XX]    .kbv REV=1,SS=1
+            0xF6, 1, 0x01,      //Interface Control [01 00 00] .kbv BGR=0
 			0xB4, 1, 0x00,      //Inversion Control [02] .kbv NLA=1, NLB=1, NLC=1
 			0xC0, 1, 0x21,      //Power Control 1 [26]
 			0xC1, 1, 0x11,      //Power Control 2 [00]
