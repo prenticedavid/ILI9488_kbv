@@ -66,7 +66,15 @@
 
 static uint8_t spibuf[16];
 
-#if defined(ESP8266)
+#if 0
+#elif defined(ESP32)
+#define CD_PIN     13
+#define CS_PIN     5
+#define RESET_PIN  12
+#define SD_PIN     17
+#define MOSI_PIN   23
+#define SCK_PIN    18
+#elif defined(ESP8266)
 #define CD_PIN     D9
 #define CS_PIN     D10
 #define RESET_PIN  D8
@@ -142,7 +150,7 @@ static inline void write16_N(uint16_t color, int16_t n)
 		WriteDat8(hi);
 		WriteDat8(lo);
 	}
-#elif defined(ESP8266)
+#elif defined(ESP8266) || defined(ESP32)
     uint8_t hilo[2];
 	hilo[0] = color >> 8;
 	hilo[1] = color;
@@ -189,7 +197,7 @@ static inline void write24_N(uint16_t color, int16_t n)
 		WriteDat8(g);
 		WriteDat8(b);
 	}
-#elif defined(ESP8266)
+#elif defined(ESP8266) || defined(ESP32)
     uint8_t rgb[3];
 	rgb[0] = color >> 8;
 	rgb[1] = color >> 3;
@@ -209,7 +217,7 @@ static inline void write8_block(uint8_t * block, int16_t n)
 {
 #if defined(NINEBITS)
     while (n-- > 0) WriteDat8(*block++);
-#elif defined(ESP8266)
+#elif defined(ESP8266) || defined(ESP32)
 	SPI.writeBytes(block, (uint32_t)n);
 #elif defined(DMA__STM32F1__)
     SPI.dmaSend(block, n, 1);
