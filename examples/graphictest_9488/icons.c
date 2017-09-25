@@ -1,4 +1,4 @@
-#if defined(__arm__) || defined(ESP82660 || defined(ESP32)
+#if defined(__arm__) || defined(ESP8266) || defined(ESP32)
 #define PROGMEM
 #else 
 #include <Arduino.h>
