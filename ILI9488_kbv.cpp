@@ -1,8 +1,16 @@
-//#define USE_ILI9341
+//#define USE_ST7789
+#define USE_ILI9341
 #include "ILI9488_kbv.h"
 #include "serial_kbv.h"
 
-#if defined(USE_ILI9341)
+#if 0
+#elif defined(USE_ST7789)
+#define NINEBITS
+#define ILI9488_TFTWIDTH 240
+#define ILI9488_TFTHEIGHT 320
+//#define SPIREAD_CMD    0xD9
+//#define SPIREAD_EN    (1<<4)
+#elif defined(USE_ILI9341)
 #define ILI9488_TFTWIDTH 240
 #define ILI9488_TFTHEIGHT 320
 #define SPIREAD_CMD    0xD9
@@ -345,7 +353,39 @@ const uint8_t PROGMEM ILI9488_regValues_jared[] = {
             0x29, 0,            //Display On
 };
 
-#if defined(USE_ILI9341)
+#if 0
+#elif defined(USE_ST7789)
+        static const uint8_t ST7789_regValues[] PROGMEM = {
+            (0xB2), 5, 0x0C, 0x0C, 0x00, 0x33, 0x33,    //PORCTRK: Porch setting [08 08 00 22 22] PSEN=0 anyway
+            (0xB7), 1, 0x35,    //GCTRL: Gate Control [35]
+            (0xBB), 1, 0x2B,    //VCOMS: VCOM setting VCOM=1.175 [20] VCOM=0.9
+            (0xC0), 1, 0x04,    //LCMCTRL: LCM Control [2C]
+            (0xC2), 2, 0x01, 0xFF,      //VDVVRHEN: VDV and VRH Command Enable [01 FF]
+            (0xC3), 1, 0x11,    //VRHS: VRH Set VAP=4.4, VAN=-4.4 [0B]
+            (0xC4), 1, 0x20,    //VDVS: VDV Set [20]
+            (0xC6), 1, 0x0F,    //FRCTRL2: Frame Rate control in normal mode [0F]
+            (0xD0), 2, 0xA4, 0xA1,      //PWCTRL1: Power Control 1 [A4 A1]
+            (0xE0), 14, 0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19,     //PVGAMCTRL: Positive Voltage Gamma control        
+            (0xE1), 14, 0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19,     //NVGAMCTRL: Negative Voltage Gamma control
+        };
+        static const uint8_t ST7789_regValues_arcain6[] PROGMEM = {
+            (0xB2), 5, 0x0C, 0x0C, 0x00, 0x33, 0x33,    //PORCTRK: Porch setting [08 08 00 22 22] PSEN=0 anyway
+            (0xB7), 1, 0x35,    //GCTRL: Gate Control [35]
+            (0xBB), 1, 0x35,    //VCOMS: VCOM setting VCOM=??? [20] VCOM=0.9
+            (0xC0), 1, 0x2C,    //LCMCTRL: LCM Control [2C]
+            (0xC2), 2, 0x01, 0xFF,      //VDVVRHEN: VDV and VRH Command Enable [01 FF]
+            (0xC3), 1, 0x13,    //VRHS: VRH Set VAP=???, VAN=-??? [0B]
+            (0xC4), 1, 0x20,    //VDVS: VDV Set [20]
+            (0xC6), 1, 0x0F,    //FRCTRL2: Frame Rate control in normal mode [0F]
+            (0xCA), 1, 0x0F,    //REGSEL2 [0F]
+            (0xC8), 1, 0x08,    //REGSEL1 [08]
+            (0x55), 1, 0x90,    //WRCACE  [00]
+            (0xD0), 2, 0xA4, 0xA1,      //PWCTRL1: Power Control 1 [A4 A1]
+            (0xE0), 14, 0xD0, 0x00, 0x06, 0x09, 0x0B, 0x2A, 0x3C, 0x55, 0x4B, 0x08, 0x16, 0x14, 0x19, 0x20,     //PVGAMCTRL: Positive Voltage Gamma control        
+            (0xE1), 14, 0xD0, 0x00, 0x06, 0x09, 0x0B, 0x29, 0x36, 0x54, 0x4B, 0x0D, 0x16, 0x14, 0x21, 0x20,     //NVGAMCTRL: Negative Voltage Gamma control
+        };
+#define tableNNNN ST7789_regValues
+#elif defined(USE_ILI9341)
 		static const uint8_t ILI9341_regValues_2_4[] PROGMEM = {   // BOE 2.4"
 			0x01, 0,            // software reset
 			TFTLCD_DELAY8, 50,   // .kbv
