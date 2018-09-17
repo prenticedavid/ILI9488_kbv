@@ -1,5 +1,5 @@
-#if defined(__AVR_ATmega328P__) && defined(ILI9488_KBV_H_) 
-//#define USE_SERIAL_COMPLEX     //optimised C code for Uno, Xmega, ...
+#if defined(__AVR_ATmega328P__) && defined(ILI9488_KBV_H_)
+#define USE_SERIAL_COMPLEX     //optimised C code for Uno, Xmega, ...
 #endif
 #if defined(__STM32F1__)
 #define DMA__STM32F1__         //special feature of MAPLE CORE
@@ -25,7 +25,7 @@
 #define SD_ACTIVE  PIN_LOW(SD_PORT, SD_PIN)
 #define SD_IDLE    PIN_HIGH(SD_PORT, SD_PIN)
 #define SD_OUTPUT  PIN_OUTPUT(SD_PORT, SD_PIN)
- // bit-bang macros for SDIO
+// bit-bang macros for SDIO
 #define SCK_LO     PIN_LOW(SPI_PORT, SCK_PIN)
 #define SCK_HI     PIN_HIGH(SPI_PORT, SCK_PIN)
 #define SCK_OUT    PIN_OUTPUT(SPI_PORT, SCK_PIN)
@@ -54,7 +54,7 @@
 #else
 #define xchg8(x)     xchg8_1(x)
 #define WriteCmd(x)  { CD_COMMAND; xchg8_1(x); CD_DATA; }
-#define INIT()  { CS_IDLE; RESET_IDLE; SETDDR; SPI.begin(); SPI.beginTransaction(settings); }
+#define INIT()  { CS_IDLE; RESET_IDLE; SETDDR; SPI.endTransaction(); SPI.begin(); SPI.beginTransaction(settings); }
 #define SDIO_INMODE()  SPI.endTransaction(); MOSI_IN;SCK_OUT    //no braces
 #define SDIO_OUTMODE() {MOSI_OUT;SCK_OUT;SPI.beginTransaction(settings);}
 #endif
@@ -111,9 +111,9 @@ static inline void write_8(uint8_t val)
 {
     for (uint8_t i = 0; i < 8; i++) {   //send command
         if (val & 0x80) MOSI_HI;
-	    else MOSI_LO;
-		SCK_HI;
-		SCK_LO;
+        else MOSI_LO;
+        SCK_HI;
+        SCK_LO;
         val <<= 1;
     }
 }
@@ -122,94 +122,152 @@ static inline uint8_t xchg8_1(uint8_t x)
 {
 #if defined(DMA__STM32F1__)
     uint8_t ret;
-	SPI.dmaTransfer(&x, &ret, 1);
-	return ret;
+    SPI.dmaTransfer(&x, &ret, 1);
+    return ret;
 #else
-	return SPI.transfer(x);
+    return SPI.transfer(x);
 #endif
 }
 
 static uint32_t readbits(uint8_t bits)
 {
-	uint32_t ret = 0;
-	while (bits--) {
-		ret <<= 1;
-		if (PIN_READ(SPI_PORT, MOSI_PIN))
-		    ret++;
-		SCK_HI;
-		SCK_LO;
-	}
-	return ret;
+    uint32_t ret = 0;
+    while (bits--) {
+        ret <<= 1;
+        if (PIN_READ(SPI_PORT, MOSI_PIN))
+            ret++;
+        SCK_HI;
+        SCK_LO;
+    }
+    return ret;
 }
 
 static inline void write16_N(uint16_t color, int16_t n)
 {
 #if defined(NINEBITS)
-	uint8_t hi = color >> 8, lo = color;
-	while (n-- > 0) {
-		WriteDat8(hi);
-		WriteDat8(lo);
-	}
+    uint8_t hi = color >> 8, lo = color;
+    while (n-- > 0) {
+        WriteDat8(hi);
+        WriteDat8(lo);
+    }
 #elif defined(ESP8266) || defined(ESP32)
     uint8_t hilo[2];
-	hilo[0] = color >> 8;
-	hilo[1] = color;
-	SPI.writePattern(hilo, 2, (uint32_t)n);
+    hilo[0] = color >> 8;
+    hilo[1] = color;
+    SPI.writePattern(hilo, 2, (uint32_t)n);
 #elif defined(DMA__STM32F1__)
-  SPI.setDataSize (SPI_CR1_DFF); // Set SPI 16bit mode
+    SPI.setDataSize (SPI_CR1_DFF); // Set SPI 16bit mode
     SPI.dmaSend(&color, n, 0);
-  SPI.setDataSize (0);
+    SPI.setDataSize (0);
 #elif defined(__STM32F1__)
     uint8_t buf[64];
-	int cnt = (n > 32) ? 32 : n;
-	uint8_t *p = buf;
-	while (cnt--) { *p++ = color >> 8; *p++ = color; }
-	while (n > 0) {
-		cnt = (n > 32) ? 32 : n;
-		SPI.write(buf, cnt << 1);
-		n -= cnt;
-	}
+    int cnt = (n > 32) ? 32 : n;
+    uint8_t *p = buf;
+    while (cnt--) {
+        *p++ = color >> 8;
+        *p++ = color;
+    }
+    while (n > 0) {
+        cnt = (n > 32) ? 32 : n;
+        SPI.write(buf, cnt << 1);
+        n -= cnt;
+    }
 #elif 1
     uint8_t buf[64];
-	while (n > 0) {
-    	uint8_t *p = buf;
-    	int cnt = (n > 32) ? 32 : n;
-    	while (cnt--) { *p++ = color >> 8; *p++ = color; }
-		cnt = (n > 32) ? 32 : n;
-		SPI.transfer(buf, cnt << 1);
-		n -= cnt;
-	}
+    while (n > 0) {
+        uint8_t *p = buf;
+        int cnt = (n > 32) ? 32 : n;
+        while (cnt--) {
+            *p++ = color >> 8;
+            *p++ = color;
+        }
+        cnt = (n > 32) ? 32 : n;
+        SPI.transfer(buf, cnt << 1);
+        n -= cnt;
+    }
 #else
-	uint8_t hi = color >> 8, lo = color;
-	while (n-- > 0) {
-		SPI.transfer(hi);
-		SPI.transfer(lo);
-	}
+    uint8_t hi = color >> 8, lo = color;
+    while (n-- > 0) {
+        SPI.transfer(hi);
+        SPI.transfer(lo);
+    }
 #endif
 }
 
 static inline void write24_N(uint16_t color, int16_t n)
 {
-#if defined(NINEBITS)
-	uint8_t r = color >> 8, g = (color >> 3), b = color << 3;
-	while (n-- > 0) {
-		WriteDat8(r);
-		WriteDat8(g);
-		WriteDat8(b);
-	}
-#elif defined(ESP8266) || defined(ESP32)
     uint8_t rgb[3];
-	rgb[0] = color >> 8;
-	rgb[1] = color >> 3;
-	rgb[2] = color << 3;
-	SPI.writePattern(rgb, 3, (uint32_t)n);
+    uint8_t r = (color >> 8) & 0xF8, g = (color >> 3) & 0xFC, b = color << 3;
+#if defined(NINEBITS)
+    while (n-- > 0) {
+        WriteDat8(r);
+        WriteDat8(g);
+        WriteDat8(b);
+    }
+#elif defined(ESP8266)
+    rgb[0] = r;
+    rgb[1] = g;
+    rgb[2] = b;
+    while (n > 0) {
+        int cnt = (n > 32) ? 32 : n;
+        n -= cnt;
+        SPI.writePattern(rgb, 3, cnt);  //not working on ESP8266 with size=3
+    }
+#elif defined(ESP32)
+    rgb[0] = r;
+    rgb[1] = g;
+    rgb[2] = b;
+    SPI.writePattern(rgb, 3, (uint32_t)n);  //not working on ESP8266 with size=3
+#elif defined(ARDUINO_ARCH_AVR)
+    SPDR = r;
+    while ((SPSR & 0x80) == 0) ;
+    SPDR = g;
+    SPDR;
+    while ((SPSR & 0x80) == 0) ;
+    SPDR = b;
+    SPDR;
+    while (--n) {
+        while ((SPSR & 0x80) == 0) ;
+        SPDR = r;
+        SPDR;
+        while ((SPSR & 0x80) == 0) ;
+        SPDR = g;
+        SPDR;
+        while ((SPSR & 0x80) == 0) ;
+        SPDR = b;
+        SPDR;
+    }
+    while ((SPSR & 0x80) == 0) ;
+    SPDR;
+#elif defined(__STM32F1__) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_DUE)
+    uint8_t buf[96];
+    int cnt = (n > 32) ? 32 : n;
+    uint8_t *p = buf;
+    while (cnt--) {
+        *p++ = r;
+        *p++ = g;
+        *p++ = b;
+    }
+    while (n > 0) {
+        cnt = (n > 32) ? 32 : n;
+        n -= cnt;
+#if defined(__STM32F1__)
+        SPI.write(buf, cnt * 3);
+#elif defined(ARDUINO_ARCH_STM32)
+        uint8_t dummy[96];
+        SPI.transfer(buf, dummy, cnt * 3);
+#else //if defined(ARDUINO_ARCH_DUE) || defined(ARDUINO_ARCH_AVR)
+        uint8_t dummy[96];
+        memcpy(dummy, buf, cnt * 3);
+        SPI.transfer(dummy, cnt * 3);  //brain-dead method destroys source
+#endif
+    }
 #else
-	uint8_t r = color >> 8, g = (color >> 3), b = color << 3;
-	while (n-- > 0) {
-		SPI.transfer(r);
-		SPI.transfer(g);
-		SPI.transfer(b);
-	}
+    while (n-- > 0) {
+        SPI.transfer(r);
+        SPI.transfer(g);
+        SPI.transfer(b);
+    }
 #endif
 }
 
@@ -217,14 +275,16 @@ static inline void write8_block(uint8_t * block, int16_t n)
 {
 #if defined(NINEBITS)
     while (n-- > 0) WriteDat8(*block++);
-#elif defined(ESP8266) || defined(ESP32)
-	SPI.writeBytes(block, (uint32_t)n);
+#elif defined(ESP8266)
+    SPI.writePattern(block, (uint32_t)n, 1);  //goes wrong on ESP32
+#elif defined(ESP32)
+    SPI.writeBytes(block, n);
 #elif defined(DMA__STM32F1__)
     SPI.dmaSend(block, n, 1);
 #elif defined(__STM32F1__)
-	SPI.write(block, (uint32_t)n);
+    SPI.write(block, (uint32_t)n);
 #else
-	SPI.transfer(block, n);
+    SPI.transfer(block, n);              //brain-dead method destroys source
 #endif
 }
 #endif
