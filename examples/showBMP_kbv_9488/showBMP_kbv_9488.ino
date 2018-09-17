@@ -40,8 +40,8 @@ ILI9488_kbv tft;
 
 #define NAMEMATCH ""        // "" matches any name
 //#define NAMEMATCH "tiger"   // *tiger*.bmp
-//#define PALETTEDEPTH   0     // do not support Palette modes
-#define PALETTEDEPTH   8     // support 256-colour Palette ESP has lots of SRAM
+#define PALETTEDEPTH   0     // do not support Palette modes
+//#define PALETTEDEPTH   8     // support 256-colour Palette ESP has lots of SRAM
 
 char namebuf[32] = "/";   //BMP files in root directory
 //char namebuf[32] = "/bitmaps/";  //BMP directory e.g. files in /bitmaps/*.bmp
@@ -53,8 +53,20 @@ void setup()
 {
     uint16_t ID;
     Serial.begin(9600);
-    Serial.print("Show BMP files on TFT with ID:0x");
-    ID = 0x9488;
+    Serial.println();
+#if defined(_TFT_eSPIH_)
+    Serial.println(F("TFT_eSPI library"));
+#elif defined(ILI9488_KBV_H_)
+    Serial.println(F("ILI9488_kbv library"));
+#elif defined(MCUFRIEND_KBV_H_)
+    Serial.println(F("MCUFRIEND_kbv library"));
+#endif
+    Serial.print(F("Show BMP files on SD_CS: "));
+    Serial.print(SD_CS);
+    Serial.print(F(", TFT with ID:0x"));
+    digitalWrite(SD_CS, HIGH);
+    pinMode(SD_CS, OUTPUT);
+    ID = 0x1234;
 #if !defined(_TFT_eSPIH_)
     ID = tft.readID();
 #endif
@@ -62,10 +74,12 @@ void setup()
     if (ID == 0x0D3D3) ID = 0x9481;
     tft.begin(ID);
     tft.fillScreen(0x001F);
+    yield();
     tft.setTextColor(0xFFFF, 0x0000);
+    tft.print("Starting SD card");
     bool good = SD.begin(SD_CS);
     if (!good) {
-        Serial.print(F("cannot start SD"));
+        Serial.println(F("cannot start SD"));
         while (1) yield();
     }
     root = SD.open(namebuf);
@@ -112,6 +126,9 @@ void loop()
                     break;
                 case 5:
                     Serial.println(F("unsupported palette"));
+                    break;
+                case 6:
+                    Serial.println(F("can't open"));
                     break;
                 default:
                     Serial.println(F("unknown"));
@@ -161,6 +178,7 @@ uint8_t showBMP(char *nm, int x, int y)
         return 1;               // off screen
 
     bmpFile = SD.open(nm);      // Parse BMP header
+    if (bmpFile == NULL) return 6; //can't open
     bmpID = read16(bmpFile);    // BMP signature
     (void) read32(bmpFile);     // Read & ignore file size
     (void) read32(bmpFile);     // Read & ignore creator bytes
@@ -174,7 +192,7 @@ uint8_t showBMP(char *nm, int x, int y)
     if (bmpID != 0x4D42) ret = 2; // bad ID
     else if (n != 1) ret = 3;   // too many planes
     else if (pos != 0 && pos != 3) ret = 4; // format: 0 = uncompressed, 3 = 565
-    else if (bmpDepth < 16 && bmpDepth > PALETTEDEPTH) ret = 5; // palette 
+    else if (bmpDepth < 16 && bmpDepth > PALETTEDEPTH) ret = 5; // palette
     else {
         bool first = true;
         is565 = (pos == 3);               // ?already in 16-bit format
@@ -282,4 +300,3 @@ uint8_t showBMP(char *nm, int x, int y)
     bmpFile.close();
     return (ret);
 }
-
