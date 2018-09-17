@@ -38,10 +38,12 @@ Serial.println("");
 #define IS_9481   (1<<4)
 #define IS_9486   (1<<5)
 const char *chip = "controller";
-//char interface = 0;    //regular ST7735, ILI9163
+//char interface = SDA_INPUT;    //regular ST7735, ILI9163
 //char interface = HAS_MISO | IS_9341;  //ILI9341 SPI
 //char interface = HAS_MISO | IS_9481;  //ILI9481 SPI
+//char interface = SDA_INPUT | IS_9481;  //ILI9481 SPI
 char interface = HAS_MISO | IS_9486;  //ILI9486 SPI
+//char interface = SDA_INPUT | IS_9486;  //ILI9488 SPI bidirectional
 //char interface = HAS_MISO;  //regular SPI
 //char interface = NINEBITS | SDA_INPUT | IS_9481;  //ILI9481 3-wire SPI bidirectional pin
 
@@ -58,7 +60,7 @@ void setup() {
     Serial.println("certain registers read first byte e.g. 0x00-0x0F, 0xDA-0xDC");
     Serial.println("other multi-argument registers read first byte as dummy");
     Serial.println("");
-    
+
     if (interface & HAS_MISO)
         Serial.println("Read registers 8-bit SPI with MISO (+ DC)");
     else if (interface & NINEBITS)
@@ -84,14 +86,14 @@ void setup() {
     if (ID == 0x548066uL) chip = "ILI9163C";
     ID &= 0xFF0000;
     if (ID == 0x5C0000) chip = "ST7735";
-    //    read_7735(chip);
+    //    read_7735((char*)chip);
     //    read_regs("diagnose any controller");
     //    read_61509("R61509 / ILI9326");
     //    read_9327("ILI9327");
-    read_9338("ILI9302 / ILI9329 / ILI9338 / ILI9341");
-    if (interface & NINEBITS) find_sekret();
+    //    read_9338("ILI9302 / ILI9329 / ILI9338 / ILI9341");
+    //    if (interface & NINEBITS) find_sekret();
     //    read_9481("ILI9481 / HX8357 / R61581");
-    //    read_9486("ILI9486 / 1LI9488");
+    read_9486("ILI9486 / 1LI9488");
 }
 
 void read_7735(char *title)
@@ -160,7 +162,7 @@ void writeblock(uint8_t cmd, uint8_t *block, int8_t N)
 uint32_t read8(uint8_t bits, uint8_t dummy)
 {
     uint32_t ret = 0;
-    uint8_t SDAPIN = (interface & HAS_MISO) ? TFT_MISO : TFT_MOSI;
+    uint8_t SDAPIN = (interface & SDA_INPUT) ? TFT_MOSI : TFT_MISO;
     pinMode(SDAPIN, INPUT_PULLUP);
     digitalWrite(TFT_DC, HIGH);
     for (int i = 0; i < dummy; i++) {  //any dummy clocks
@@ -286,11 +288,17 @@ void readReg(uint16_t reg, uint8_t n, const char *msg)
     dummy = reg == 4 || reg == 9 || reg == 0xBF || reg == 0xA1;
     writeblock(0x01, NULL, 0);   //software reset first
     delay(100);
-    if (interface & IS_9481) {
-        d[0] = 0x00;
-        writeblock(0xB0, d, 1);  //UNLOCK
-        d[0] = 0x80;             //covers several bidirectional
-        writeblock(0xC6, d, 1);  //enable SDA as input
+    if (interface & SDA_INPUT) {
+        if (interface & IS_9481) {
+            d[0] = 0x00;
+            writeblock(0xB0, d, 1);  //UNLOCK
+            d[0] = 0x80;             //covers several bidirectional
+            writeblock(0xC6, d, 1);  //enable SDA as input
+        }
+        if (interface & IS_9486) {
+            d[0] = 0x80;             // bidirectional
+            writeblock(0xB0, d, 1);  //enable SDA as input
+        }
     }
     Serial.print(" reg(0x");
     printhex(reg);
@@ -390,4 +398,3 @@ uint32_t readwrite8(uint8_t cmd, uint8_t bits, uint8_t dummy)
     return ret;
 }
 #endif
-
