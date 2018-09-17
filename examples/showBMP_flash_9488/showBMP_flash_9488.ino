@@ -1,7 +1,7 @@
 #if defined(ESP8266)
 #define FLASH_CS D3
 #else
-#define FLASH_CD 3        //select 3 or 5 on ILI9488 Protoshield
+#define FLASH_CS 3        //select 3 or 5 on ILI9488 Protoshield
 #endif
 
 #include <SPI.h>          // f.k. for Arduino-1.5.2
