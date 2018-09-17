@@ -1,6 +1,7 @@
 #ifndef ILI9488_KBV_H_
 #define ILI9488_KBV_H_ 100
 
+//#define USE_ILI9341
 #define USE_MBED 0
 
 #if ARDUINO < 101

@@ -1,5 +1,5 @@
 //#define USE_ST7789
-#define USE_ILI9341
+//########define USE_ILI9341
 #include "ILI9488_kbv.h"
 #include "serial_kbv.h"
 
